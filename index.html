@@ -22,7 +22,7 @@
 <canvas id="numbers"  >
 Your browser does not support the HTML5 canvas tag.
 </canvas>
-<input id ="inputTel" type="tel"  autofocus="autofocus">
+<input id ="inputTel" type="text" pattern="[0-9]*" autofocus="autofocus">
 <script>
    "use strict";
    // TO DO display result if failure
@@ -73,6 +73,7 @@ Your browser does not support the HTML5 canvas tag.
       {  
          let _self = this;
          let InputNumber = document.getElementById("inputTel");
+         InputNumber.addEventListener('load',function() {this.focus();});
 
          InputNumber.addEventListener('keyup',function(event) {
             let length = this.value.length;
@@ -95,7 +96,7 @@ Your browser does not support the HTML5 canvas tag.
          InputNumber.addEventListener('keydown',function(event) {
             if( ((event.key < '0') ||(event.key > '9')) && 
                   ( 8 !=event.keyCode))
-            {
+                  {
                event.preventDefault();
             }
          });
