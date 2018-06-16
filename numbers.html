@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+   <head>
+   <meta charset="utf-8"/>
+  <style>
+   canvas {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+   display: block;
+
+   }
+   input { opacity: 0;}
+  </style>
+</head>
+<body>
+<audio id="Success">
+  <source src="success.mp3" type="audio/mpeg">
+  Your browser does not support the audio element.
+</audio>
+<canvas id="numbers"  >
+Your browser does not support the HTML5 canvas tag.
+</canvas>
+<input id ="inputTel" type="tel"  autofocus="autofocus">
+<script>
+   "use strict";
+   // TO DO display result if failure
+   // always display correct guessed positions
+
+   const DIGITS = 8;
+   const SIZE = 60;
+   const HALF_SIZE = SIZE/2;
+
+   class Number 
+   {
+      //var _self = this;
+
+      constructor (number)
+      {
+         this.number = number.toString();
+ 
+         this.result = [];
+         this.row= 0;
+         this.numberFreq = this.ProcessNumber();
+         this.sucess = document.getElementById("Success"); 
+         
+         this.ctx = this.initBoard();
+
+
+         this.InputNumber = this.InitInputNumber();
+
+      }
+
+      ProcessNumber()
+      {
+         let numberFreq = [];
+         for( let i = 0; i <  DIGITS;i++)
+         {
+            let elem = this.number[i];
+            if (elem in numberFreq )
+            {
+               numberFreq[elem]++;
+            }
+            else
+            {
+               numberFreq[elem]=1;
+            }
+         }
+         return numberFreq;
+      }      
+      InitInputNumber()
+      {  
+         let _self = this;
+         let InputNumber = document.getElementById("inputTel");
+
+         InputNumber.addEventListener('keyup',function(event) {
+            let length = this.value.length;
+
+           
+            if ( event.key >= '0' && event.key <= '9')
+            {
+               number.drawCell(length -1 , event.key, 'blue');
+               if ( length == DIGITS)
+               {
+                  _self.processInput();
+               }
+            }
+            else if (event.keyCode == 8)
+            {
+                _self.drawCell(length, null, 'blue');
+            }
+
+         });
+         InputNumber.addEventListener('keydown',function(event) {
+            if( ((event.key < '0') ||(event.key > '9')) && 
+                  ( 8 !=event.keyCode))
+            {
+               event.preventDefault();
+            }
+         });
+         
+         return InputNumber;
+      }
+         
+      processInput () 
+      {
+         this.InputNumber.disabled = true;
+         let numberFreq = this.numberFreq.slice();
+
+          let positions = [...Array(DIGITS).keys()];
+         for ( let i = 0; i < DIGITS; i++)
+         {
+            let digit = this.InputNumber.value[i];
+
+            if (this.number[i] == digit)
+            {
+               this.drawCell(i, digit, 'green');
+               this.result[i]=digit;
+               numberFreq[digit] --;
+               delete positions[i]; 
+            }else if ((numberFreq[digit] === undefined) ||
+                      (0 == numberFreq[digit]))  
+            {
+               this.drawCell(i, digit, 'gray');
+               delete positions[i]; 
+            }
+         }
+         
+         for ( let i in positions)
+         {
+            let digit = this.InputNumber.value[i];
+
+            if(numberFreq[digit] > 0)
+            {
+               this.drawCell(i, digit, 'yellow');
+               numberFreq[digit]--;
+            }
+            else
+            {
+               this.drawCell(i, digit, 'gray');
+            }
+         }
+         
+         
+         if(DIGITS != Object.keys(this.result).length)
+         {
+            if(this.row < DIGITS-1)
+            { 
+               this.row++;
+               this.displayResult();
+
+               this.InputNumber.value="";
+
+            }else
+            {
+               ctx.fillStyle='black';
+               ctx.fillText(number, ctx.canvas.width/2,ctx.canvas.height/2);
+            }
+         }else
+         {
+              this.sucess.play();
+               this.ctx.fillStyle='red';
+               this.ctx.fillText("You Win", this.ctx.canvas.width/2,this.ctx.canvas.height/2);
+         }
+
+         this.InputNumber.disabled = false;
+   }   
+   
+      drawCell(col, digit,color)
+      {
+         var x=col*SIZE, y=this.row*SIZE;
+         this.ctx.fillStyle=color;
+         this.ctx.fillRect(x ,y, SIZE, SIZE);
+         if( digit) 
+         {
+            this.ctx.fillStyle='white';
+            this.ctx.fillText(digit, x+HALF_SIZE,y+HALF_SIZE);
+         }
+      }
+      displayResult()
+      {
+         for ( let key in this.result)
+         {  
+          this.drawCell(key,this.result[key],'green')
+         }
+      }
+
+      initBoard()
+      {
+        let canvas = document.getElementById('numbers');
+              
+              
+         let ctx = canvas.getContext('2d');
+
+          ctx.canvas.height = ctx.canvas.width  =DIGITS*SIZE;
+          ctx.textBaseline="middle";
+          ctx.textAlign="center"; 
+          ctx.font = "30px Arial";
+
+         for (var i = 0; i <= ctx.canvas.height; i+=SIZE) 
+         {
+           
+            ctx.moveTo(i,0);
+            ctx.lineTo(i,ctx.canvas.height);
+                  ctx.moveTo(0,i);
+             ctx.lineTo(ctx.canvas.width,i);
+         }
+         ctx.stroke();
+         
+         return ctx;
+      }
+      
+}
+
+
+
+
+
+   
+   var number = new Number(Math.floor(Math.random() * 90000000)+10000000);
+
+
+
+
+
+</script>
+</body>
+
+</html>
