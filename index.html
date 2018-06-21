@@ -3,15 +3,27 @@
    <head>
    <meta charset="utf-8"/>
   <style>
+      body {
+          text-align:center;
+          position:relative;
+      }
+      div{
+
+            display:inline-block;
+              position:relative;
+
+      }
+
    canvas {
-    padding-left: 0;
-    padding-right: 0;
-    margin-left: auto;
-    margin-right: auto;
-   display: block;
+
+    z-index: -1;
 
    }
-   input { opacity: 1;}
+   input { opacity: 0;
+       position:absolute;
+       left:0;
+       top:0;
+       }
   </style>
 </head>
 <body>
@@ -19,14 +31,17 @@
   <source src="success.mp3" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
+<div >
+
 <canvas id="numbers"  >
 Your browser does not support the HTML5 canvas tag.
 </canvas>
 <input id ="inputTel" type="number" pattern="[0-9]*" autofocus>
+
+</div>
 <script>
    "use strict";
-   // TO DO display result if failure
-   // always display correct guessed positions
+
 
    const DIGITS = 8;
    const SIZE = 60;
@@ -44,10 +59,14 @@ Your browser does not support the HTML5 canvas tag.
          this.row= 0;
          this.numberFreq = this.ProcessNumber();
          this.sucess = document.getElementById("Success"); 
-         
-         this.ctx = this.initBoard();
+         this.InputNumber = document.getElementById("inputTel");
+         let canvas = document.getElementById("numbers");
 
+        this.ctx = this.initBoard(canvas);
 
+        this.InputNumber.style.width= this.InputNumber.style.height= 
+                                                    canvas.width +"px";
+                                        
          this.InputNumber = this.InitInputNumber();
 
       }
@@ -69,15 +88,17 @@ Your browser does not support the HTML5 canvas tag.
          }
          return numberFreq;
       }      
+      
       InitInputNumber()
       {  
          let _self = this;
          let InputNumber = document.getElementById("inputTel");
-
+         InputNumber.value="";
+  
          InputNumber.addEventListener('keyup',function(event) {
             let length = this.value.length;
 
-           
+
             if ( event.key >= '0' && event.key <= '9')
             {
                number.drawCell(length -1 , event.key, 'blue');
@@ -86,20 +107,27 @@ Your browser does not support the HTML5 canvas tag.
                   _self.processInput();
                }
             }
-            else if (event.keyCode == 8)
+            else if ((event.keyCode == 8) || (event.keyCode ==229))
             {
+
                 _self.drawCell(length, null, 'blue');
+                
             }
 
          });
          document.addEventListener('keydown',function(event) {
+
          InputNumber.focus();
             if( ((event.key < '0') ||(event.key > '9')) && 
                   ( 8 !=event.keyCode))
                   {
                event.preventDefault();
             }
+    
          });
+
+
+
          
          return InputNumber;
       }
@@ -134,7 +162,7 @@ Your browser does not support the HTML5 canvas tag.
 
             if(numberFreq[digit] > 0)
             {
-               this.drawCell(i, digit, 'yellow');
+               this.drawCell(i, digit, 'gold');
                numberFreq[digit]--;
             }
             else
@@ -187,21 +215,18 @@ Your browser does not support the HTML5 canvas tag.
          }
       }
 
-      initBoard()
+      initBoard(canvas)
       {
-        let canvas = document.getElementById('numbers');
-              
-              
+          
          let ctx = canvas.getContext('2d');
 
-          ctx.canvas.height = ctx.canvas.width  =DIGITS*SIZE;
+           ctx.canvas.height = ctx.canvas.width = DIGITS*SIZE;
           ctx.textBaseline="middle";
           ctx.textAlign="center"; 
           ctx.font = "30px Arial";
 
          for (var i = 0; i <= ctx.canvas.height; i+=SIZE) 
          {
-           
             ctx.moveTo(i,0);
             ctx.lineTo(i,ctx.canvas.height);
                   ctx.moveTo(0,i);
