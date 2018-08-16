@@ -7,7 +7,7 @@
           text-align:center;
           position:relative;
       }
-      div{
+      #grid{
 
             display:inline-block;
               position:relative;
@@ -31,13 +31,22 @@
   <source src="success.mp3" type="audio/mpeg">
   Your browser does not support the audio element.
 </audio>
-<div >
+
+
+<div id="grid">
 
 <canvas id="numbers"  >
 Your browser does not support the HTML5 canvas tag.
 </canvas>
-<input id ="inputTel" type="number" pattern="[0-9]*" autofocus>
+<input id ="inputTel" type="tel" pattern="[0-9]*" autofocus>
 
+</div>
+<div id="text">
+Enter phone numbers using digits (0...9) <BR>
+First digit different from 0 <BR>
+backspace to delete digits <BR>
+Enter to validate <BR>
+<button id="New" type="button">New game</button>
 </div>
 <script>
    "use strict";
@@ -49,26 +58,58 @@ Your browser does not support the HTML5 canvas tag.
 
    class Number 
    {
-      //var _self = this;
 
       constructor (number)
+      {
+ 
+     
+         this.sucess = document.getElementById("Success"); 
+
+         this.canvas = document.getElementById("numbers");
+    
+
+         this.InputNumber = this.InitInputNumber();
+
+         this.NewGame(number);
+      }
+
+      NewGame(number)
       {
          this.number = number.toString();
  
          this.result = [];
-         this.row= 0;
+         this.row= this.col=0;
+
          this.numberFreq = this.ProcessNumber();
-         this.sucess = document.getElementById("Success"); 
-         this.InputNumber = document.getElementById("inputTel");
-         let canvas = document.getElementById("numbers");
+         this.ctx = this.initBoard();
 
-        this.ctx = this.initBoard(canvas);
+         this.InputNumber.value="";
+          this.InputNumber.focus();
+      }
 
-        this.InputNumber.style.width= this.InputNumber.style.height= 
-                                                    canvas.width +"px";
-                                        
-         this.InputNumber = this.InitInputNumber();
+      
+      initBoard()
+      {
+          
+   
 
+         let ctx = this.canvas.getContext('2d');
+
+           ctx.canvas.height = ctx.canvas.width = DIGITS*SIZE;
+          ctx.textBaseline="middle";
+          ctx.textAlign="center"; 
+          ctx.font = "30px Arial";
+
+         for (var i = 0; i <= ctx.canvas.height; i+=SIZE) 
+         {
+            ctx.moveTo(i,0);
+            ctx.lineTo(i,ctx.canvas.height);
+                  ctx.moveTo(0,i);
+             ctx.lineTo(ctx.canvas.width,i);
+         }
+         ctx.stroke();
+         
+         return ctx;
       }
 
       ProcessNumber()
@@ -93,54 +134,62 @@ Your browser does not support the HTML5 canvas tag.
       {  
          let _self = this;
          let InputNumber = document.getElementById("inputTel");
-         InputNumber.value="";
+
   
          InputNumber.addEventListener('keyup',function(event) {
-            let length = this.value.length;
 
 
-            if ( event.key >= '0' && event.key <= '9')
+  
+            if(('Enter'==event.key ) && (DIGITS ==this.value.length ))
             {
-               number.drawCell(length -1 , event.key, 'blue');
-               if ( length == DIGITS)
-               {
-                  _self.processInput();
-               }
+               _self.checkInput();
             }
-            else if ((event.keyCode == 8) || (event.keyCode ==229))
-            {
 
-                _self.drawCell(length, null, 'blue');
-                
-            }
 
          });
-         document.addEventListener('keydown',function(event) {
+
+         InputNumber.addEventListener('keydown',function(event) {
+
+        
+            if(((!this.value.length ) && ('0' == event.key)) ||
+               ((DIGITS == this.value.length) && ('Backspace' != event.key)))
+            {
+              
+               event.preventDefault();
+            }  
+
+
+         });
+
+
+          InputNumber.addEventListener('input',function() {
+
+
+              
+            _self.processInput(this);
+
+
+         });
+
 
          InputNumber.focus();
-            if( ((event.key < '0') ||(event.key > '9')) && 
-                  ( 8 !=event.keyCode))
-                  {
-               event.preventDefault();
-            }
-    
-         });
-
-
-
+         InputNumber.style.width= InputNumber.style.height=
+                                                      this.canvas.width +"px";
          
          return InputNumber;
       }
-         
-      processInput () 
+
+      checkInput(input)
       {
-         this.InputNumber.disabled = true;
+         /*this.InputNumber.disabled = true;*/
+         this.InputNumber.blur();
+         /* copy numberFreq array */
          let numberFreq = this.numberFreq.slice();
 
-          let positions = [...Array(DIGITS).keys()];
+         let positions = [...Array(DIGITS).keys()];
          for ( let i = 0; i < DIGITS; i++)
          {
-            let digit = this.InputNumber.value[i];
+             let digit = this.InputNumber.value[i];
 
             if (this.number[i] == digit)
             {
@@ -155,11 +204,11 @@ Your browser does not support the HTML5 canvas tag.
                delete positions[i]; 
             }
          }
-         
+
          for ( let i in positions)
          {
-            let digit = this.InputNumber.value[i];
 
+            let digit = this.InputNumber.value[i];
             if(numberFreq[digit] > 0)
             {
                this.drawCell(i, digit, 'gold');
@@ -167,37 +216,85 @@ Your browser does not support the HTML5 canvas tag.
             }
             else
             {
+           
                this.drawCell(i, digit, 'gray');
             }
          }
-         
-         
+    
+         this.displayResult();
+
+
+      }
+
+      displayResult()
+      {
+;
          if(DIGITS != Object.keys(this.result).length)
          {
             if(this.row < DIGITS-1)
             { 
                this.row++;
-               this.displayResult();
+               
+               for ( let key in this.result)
+               {  
+                  this.drawCell(key,this.result[key],'green')
+               }
 
+               this.col = 0;
                this.InputNumber.value="";
+               this.InputNumber.focus() ;
 
             }else
             {
-               ctx.fillStyle='black';
-               ctx.fillText(number, ctx.canvas.width/2,ctx.canvas.height/2);
+               this.DisplayText(this.number, 'black');
             }
          }else
          {
-              this.sucess.play();
-               this.ctx.fillStyle='red';
-               this.ctx.fillText("You Win", this.ctx.canvas.width/2,this.ctx.canvas.height/2);
+            this.sucess.play();
+            this.DisplayText("You Win", 'red');
          }
 
-         this.InputNumber.disabled = false;
-   }   
+     
+      }
+
+      DisplayText(Text, Color)
+      {
+         this.ctx.fillStyle=Color;
+         this.ctx.fillText(Text, this.ctx.canvas.width/2,this.ctx.canvas.height/2);
+      }
+         
+      processInput () 
+      {
+         let InputValue = this.InputNumber.value;
+         let InputLength = InputValue.length;
+         let currentPos = this.col;
+        
+       if(InputLength > currentPos)
+       { /*user enter character*/
+            let digit = InputValue[InputLength -1];
+            if ( digit >= "0" && digit <= "9")
+            {
+               console.log("row = ", this.row, "digit = ", digit);
+                 this.drawCell(this.col, digit, 'blue');
+                 this.col++;
+            } else
+            {
+                this.InputNumber.value = InputValue.slice(0,-1);
+            }
+        }
+        else if (InputLength < currentPos)
+        { /* user deleted character*/
+         
+            this.col--;
+            this.drawCell(this.col,null, 'blue');
+
+        }
+ 
+      }   
    
       drawCell(col, digit,color)
       {
+         
          var x=col*SIZE, y=this.row*SIZE;
          this.ctx.fillStyle=color;
          this.ctx.fillRect(x ,y, SIZE, SIZE);
@@ -205,48 +302,22 @@ Your browser does not support the HTML5 canvas tag.
          {
             this.ctx.fillStyle='white';
             this.ctx.fillText(digit, x+HALF_SIZE,y+HALF_SIZE);
-         }
-      }
-      displayResult()
-      {
-         for ( let key in this.result)
-         {  
-          this.drawCell(key,this.result[key],'green')
+            
          }
       }
 
-      initBoard(canvas)
-      {
-          
-         let ctx = canvas.getContext('2d');
 
-           ctx.canvas.height = ctx.canvas.width = DIGITS*SIZE;
-          ctx.textBaseline="middle";
-          ctx.textAlign="center"; 
-          ctx.font = "30px Arial";
-
-         for (var i = 0; i <= ctx.canvas.height; i+=SIZE) 
-         {
-            ctx.moveTo(i,0);
-            ctx.lineTo(i,ctx.canvas.height);
-                  ctx.moveTo(0,i);
-             ctx.lineTo(ctx.canvas.width,i);
-         }
-         ctx.stroke();
-         
-         return ctx;
-      }
       
 }
 
 
-
-
-
-   
    var number = new Number(Math.floor(Math.random() * 90000000)+10000000);
 
+   document.getElementById("New").addEventListener('click',function(event) {
+        
+         number.NewGame(Math.floor(Math.random() * 90000000)+10000000);
 
+         });
 
 
 
